@@ -14,7 +14,7 @@
     <div class="container">
         <h1>Photoshopee Editor</h1>
         <div class="row mt-5">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="row">
                     <div class="col">
                         <h3>Selecione uma imagem:</h3>
@@ -36,20 +36,22 @@
                     </a>
                     <button class="btn btn-success" onclick="flipLeftRight()">Inverter Horizontalmente</button>
                     <button class="btn btn-success" onclick="flipUpDown()">Inverter Verticalmente</button>
+                    <button class="btn btn-success" onclick="histogram()">Histograma</button>
+                    
                 </div>
             </div>
             <div class="col-md-4 align-self-center">
                 <h1>Resultado</h1>
                 <canvas id="canvasResult" width="400" height="300"></canvas>
+                <button class="btn btn-success" onclick="restaurarImagemOriginal()">Restaurar Padrão</button>
                 <h1>Efeitos</h1>
                 <div class="effects">
                     <button class="btn btn-success" onclick="grayscale()">Escala de Cinza</button>
                     <button class="btn btn-success" onclick="inversion()">Negativo</button>
                     <button class="btn btn-success" onclick="addNumberToPixels()">+ Brilho</button>
                     <button class="btn btn-success" onclick="subtractNumberFromPixels()">- Brilho</button>
-                    <button class="btn btn-success" onclick="histogram()">Histograma</button>
-                    <button class="btn btn-success" onclick="flipUpDown()">Inverter</button>
-                    <button class="btn btn-success" onclick="flipUpDown()">Inverter</button>
+                    <button class="btn btn-success" onclick="filtroMedia()">Media</button>
+                    <button class="btn btn-success" onclick="filtroMediana()">Mediana</button>
                 </div>
             </div>
         </div>

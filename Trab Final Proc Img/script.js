@@ -199,8 +199,8 @@ function histogram() {
 
     // Criar um canvas separado para desenhar o histograma com as escalas corretas
     var histogramCanvas = document.createElement("canvas");
-    histogramCanvas.width = 256 + 40; // Espaço adicional para rótulos do eixo y
-    histogramCanvas.height = 100 + 20; // Espaço para rótulos do eixo x
+    histogramCanvas.width = 296; // Largura do canvas
+    histogramCanvas.height = 400; // Altura aumentada para espaço extra
     var ctxHistogram = histogramCanvas.getContext("2d");
 
     // Desenhar o fundo branco
@@ -211,13 +211,13 @@ function histogram() {
     ctxHistogram.strokeStyle = "black";
     ctxHistogram.lineWidth = 1;
     ctxHistogram.beginPath();
-    ctxHistogram.moveTo(40, 100); // Começo do eixo x (com margem para rótulos)
-    ctxHistogram.lineTo(296, 100); // Fim do eixo x
+    ctxHistogram.moveTo(40, 350); // Começo do eixo x (com margem para rótulos)
+    ctxHistogram.lineTo(296, 350); // Fim do eixo x
     ctxHistogram.stroke();
 
     // Configurar o eixo y (0 a 1600)
     ctxHistogram.beginPath();
-    ctxHistogram.moveTo(40, 100); // Começo do eixo y
+    ctxHistogram.moveTo(40, 350); // Começo do eixo y
     ctxHistogram.lineTo(40, 0); // Fim do eixo y
     ctxHistogram.stroke();
 
@@ -226,21 +226,21 @@ function histogram() {
     ctxHistogram.font = "10px Arial";
 
     // Rótulos para o eixo x (valores de cinza)
-    for (var i = 0; i <= 255; i += 50) {
-        ctxHistogram.fillText(i.toString(), 40 + i, 115); // Rótulos ao longo do eixo x
+    for (var i = 0; i <= 250; i += 50) {
+        ctxHistogram.fillText(i.toString(), 40 + i * (canvas.width / 250), 375); // Rótulos ao longo do eixo x
     }
 
     // Rótulos para o eixo y (contagem de pixels)
-    for (var i = 0; i <= 1600; i += 400) {
-        ctxHistogram.fillText(i.toString(), 10, 100 - (i / 16)); // Rótulos ao longo do eixo y
-    }
+    for (var i = 0; i <= 1600; i += 200) {
+        ctxHistogram.fillText(i.toString(), 10, 350 - (i / 1600) * canvas.height); // Rótulos ao longo do eixo y
+    }     
 
     // Desenhar o histograma
     var maxFreq = Math.max(...histogram); // Frequência máxima para escala
-    var scaleFactor = 100 / maxFreq; // Escala para o gráfico
+    var scaleFactor = 300 / maxFreq; // Escala para o gráfico
     for (var i = 0; i < 256; i++) {
         var barHeight = histogram[i] * scaleFactor; // Altura das barras
-        ctxHistogram.fillRect(40 + i, 100 - barHeight, 1, barHeight); // Desenhar cada barra
+        ctxHistogram.fillRect(40 + i, 350 - barHeight, 1, barHeight); // Desenhar cada barra
     }
 
     // Adicionar o canvas do histograma ao documento (para visualização)
@@ -273,4 +273,106 @@ function histogram() {
 
     // Atualizar a imagem no canvasResult
     ctxResult.putImageData(imageData, 0, 0);
+}
+
+
+/// novo
+function filtroMedia() {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    const newImageData = ctx.createImageData(width, height);
+    const newData = newImageData.data;
+
+    const N = 3; // Vizinhança 3x3
+    const M = 3;
+    const Wk = 1 / (N * M);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let red = 0;
+            let green = 0;
+            let blue = 0;
+
+            for (let ky = -Math.floor(N / 2); ky <= Math.floor(N / 2); ky++) {
+                for (let kx = -Math.floor(M / 2); kx <= Math.floor(M / 2); kx++) {
+                    const iy = y + ky;
+                    const ix = x + kx;
+
+                    if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+                        const index = (iy * width + ix) * 4;
+                        red += data[index] * Wk;
+                        green += data[index + 1] * Wk;
+                        blue += data[index + 2] * Wk;
+                    }
+                }
+            }
+
+            const index = (y * width + x) * 4;
+            newData[index] = red;
+            newData[index + 1] = green;
+            newData[index + 2] = blue;
+            newData[index + 3] = data[index + 3];
+        }
+    }
+
+    ctxResult.putImageData(newImageData, 0, 0);
+}
+
+function filtroMediana() {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const width = canvas.width;
+    const height = canvas.height;
+    const newImageData = ctx.createImageData(width, height);
+    const newData = newImageData.data;
+
+    const N = 3; // Vizinhança 3x3
+    const M = 3;
+
+    // Função para calcular a mediana de um array
+    function calcularMediana(arr) {
+        const sorted = arr.slice().sort((a, b) => a - b);
+        const middle = Math.floor(sorted.length / 2);
+        if (sorted.length % 2 === 0) {
+            return (sorted[middle - 1] + sorted[middle]) / 2;
+        } else {
+            return sorted[middle];
+        }
+    }
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let redArray = [];
+            let greenArray = [];
+            let blueArray = [];
+
+            for (let ky = -Math.floor(N / 2); ky <= Math.floor(N / 2); ky++) {
+                for (let kx = -Math.floor(M / 2); kx <= Math.floor(M / 2); kx++) {
+                    const iy = y + ky;
+                    const ix = x + kx;
+
+                    if (ix >= 0 && ix < width && iy >= 0 && iy < height) {
+                        const index = (iy * width + ix) * 4;
+                        redArray.push(data[index]);
+                        greenArray.push(data[index + 1]);
+                        blueArray.push(data[index + 2]);
+                    }
+                }
+            }
+
+            const index = (y * width + x) * 4;
+            newData[index] = calcularMediana(redArray);
+            newData[index + 1] = calcularMediana(greenArray);
+            newData[index + 2] = calcularMediana(blueArray);
+            newData[index + 3] = data[index + 3];
+        }
+    }
+
+    ctxResult.putImageData(newImageData, 0, 0);
+}
+
+function restaurarImagemOriginal() {
+    ctxResult.drawImage(canvas, 0, 0);
 }
